@@ -141,6 +141,7 @@ static void *sniff_ipv6(void *arg)
 {
 	struct packet_mreq	pmr;
 	struct ethtool_value	ethtool;
+	struct sockaddr_ll	sa;
 
 	int	sniff_sock;
 	int	length;
@@ -204,6 +205,17 @@ static void *sniff_ipv6(void *arg)
 		perror("ioctl SIOCGIFHWADDR");
 		log_error("IPv6: Unable to get the interface's HW address %s",
 			  interface_ipv6.ifr_name);
+		return NULL;
+	}
+
+	/* bind to ipv6 interface */
+	memset(&sa, 0, sizeof(sa));
+	sa.sll_family		= AF_PACKET;
+	sa.sll_ifindex		= interface_ipv6.ifr_ifindex;
+	if (bind(sniff_sock, (struct sockaddr *)&sa, sizeof(sa)) == -1) {
+		perror("IPv6: interface bind");
+		log_error("Couldn't bind the sniffing socket to the "
+			  "interface %s", interface_ipv6.ifr_name);
 		return NULL;
 	}
 
@@ -280,6 +292,7 @@ static void *sniff_ipv4(void *arg)
 {
 	struct packet_mreq	pmr;
 	struct ethtool_value	ethtool;
+	struct sockaddr_ll	sa;
 
 	int	sniff_sock;
 	int	length;
@@ -343,6 +356,17 @@ static void *sniff_ipv4(void *arg)
 		perror("ioctl SIOCGIFHWADDR");
 		log_error("IPv4: Unable to get the interface's HW address %s",
 			  interface_ipv4.ifr_name);
+		return NULL;
+	}
+
+	/* bind to ipv6 interface */
+	memset(&sa, 0, sizeof(sa));
+	sa.sll_family		= AF_PACKET;
+	sa.sll_ifindex		= interface_ipv4.ifr_ifindex;
+	if (bind(sniff_sock, (struct sockaddr *)&sa, sizeof(sa)) == -1) {
+		perror("IPv4: interface bind");
+		log_error("Couldn't bind the sniffing socket to the "
+			  "interface %s", interface_ipv4.ifr_name);
 		return NULL;
 	}
 
