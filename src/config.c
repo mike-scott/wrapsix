@@ -235,6 +235,7 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 	 * list later */
 
 	/* first try to get addresses from the interface */
+	char *perc = NULL;
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
 		if (ifa->ifa_addr == NULL) {
 			continue;
@@ -248,6 +249,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 					    sizeof(struct sockaddr_in6),
 					    ip_text, sizeof(ip_text), NULL, 0,
 					    NI_NUMERICHOST);
+				perc = strchr(ip_text, '%');
+				if (perc) *perc = '\0';
 				inet_pton(AF_INET6, ip_text, ipv6_addr);
 			} else if (ifa->ifa_addr->sa_family == AF_INET &&
 				   !(found & 0x02)) {
@@ -256,6 +259,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 					    sizeof(struct sockaddr_in),
 					    ip_text, sizeof(ip_text), NULL, 0,
 					    NI_NUMERICHOST);
+				perc = strchr(ip_text, '%');
+				if (perc) *perc = '\0';
 				inet_pton(AF_INET, ip_text, ipv4_addr);
 			}
 		} else {	/* look for addresses on other interfaces too */
@@ -266,6 +271,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 					    sizeof(struct sockaddr_in6),
 					    ip_text, sizeof(ip_text), NULL, 0,
 					    NI_NUMERICHOST);
+				perc = strchr(ip_text, '%');
+				if (perc) *perc = '\0';
 				inet_pton(AF_INET6, ip_text, ipv6_addr);
 			} else if (ifa->ifa_addr->sa_family == AF_INET &&
 				   !(found & 0x0a)) {
@@ -274,6 +281,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 					    sizeof(struct sockaddr_in),
 					    ip_text, sizeof(ip_text), NULL, 0,
 					    NI_NUMERICHOST);
+				perc = strchr(ip_text, '%');
+				if (perc) *perc = '\0';
 				inet_pton(AF_INET, ip_text, ipv4_addr);
 			}
 		}
