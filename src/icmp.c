@@ -317,7 +317,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 
 	/* build ethernet header */
 	eth6->dest		= connection->mac;
-	eth6->src		= mac;
+	eth6->src		= mac_ipv6;
 	eth6->type		= htons(ETHERTYPE_IPV6);
 
 	/* build IPv6 packet */
@@ -339,7 +339,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 				       (char *) icmp);
 
 	/* send translated packet */
-	transmit_raw(packet, new_len);
+	transmit_raw6(packet, new_len);
 
 	return 0;
 }
@@ -680,7 +680,7 @@ int icmp_ndp(struct s_ethernet *ethq, struct s_ipv6 *ipq,
 
 	/* ethernet */
 	ethr->dest = ethq->src;
-	ethr->src  = mac;
+	ethr->src  = mac_ipv6;
 	ethr->type = ethq->type;
 
 	/* IPv6 */
@@ -709,7 +709,7 @@ int icmp_ndp(struct s_ethernet *ethq, struct s_ipv6 *ipq,
 				       (char *) icmp);
 
 	/* send NDP reply */
-	transmit_raw(packet, NDP_PACKET_SIZE);
+	transmit_raw6(packet, NDP_PACKET_SIZE);
 
 	return 0;
 }
@@ -828,7 +828,7 @@ int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
 
 	/* ethernet */
 	eth->dest = mac_dest;
-	eth->src  = mac;
+	eth->src  = mac_ipv6;
 	eth->type = htons(ETHERTYPE_IPV6);
 
 	/* IPv6 */
@@ -856,7 +856,7 @@ int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
 				       IPPROTO_ICMPV6, (char *) icmp);
 
 	/* send packet */
-	transmit_raw(packet, sizeof(struct s_ethernet) + sizeof(struct s_ipv6) +
+	transmit_raw6(packet, sizeof(struct s_ethernet) + sizeof(struct s_ipv6) +
 		     sizeof(struct s_icmp) + 4 + payload_size);
 
 	return 0;

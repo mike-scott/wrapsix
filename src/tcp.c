@@ -210,7 +210,7 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 
 		/* build ethernet header */
 		eth6->dest		= connection->mac;
-		eth6->src		= mac;
+		eth6->src		= mac_ipv6;
 		eth6->type		= htons(ETHERTYPE_IPV6);
 
 		/* build IPv6 header */
@@ -256,10 +256,10 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload, FRAGMENT_LEN);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) +
-					     sizeof(struct s_ipv6) +
-					     sizeof(struct s_ipv6_fragment) +
-					     FRAGMENT_LEN);
+			transmit_raw6(packet, sizeof(struct s_ethernet) +
+					      sizeof(struct s_ipv6) +
+					      sizeof(struct s_ipv6_fragment) +
+					      FRAGMENT_LEN);
 
 			/* create the second fragment */
 			ip6->len = htons(payload_size +
@@ -273,10 +273,10 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload_size - FRAGMENT_LEN);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) +
-					     sizeof(struct s_ipv6) +
-					     sizeof(struct s_ipv6_fragment) -
-					     FRAGMENT_LEN + payload_size);
+			transmit_raw6(packet, sizeof(struct s_ethernet) +
+					      sizeof(struct s_ipv6) +
+					      sizeof(struct s_ipv6_fragment) -
+					      FRAGMENT_LEN + payload_size);
 		} else {
 			ip6->len	 = htons(payload_size);
 			ip6->next_header = IPPROTO_TCP;
@@ -286,8 +286,9 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload, payload_size);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) +
-				     sizeof(struct s_ipv6) + payload_size);
+			transmit_raw6(packet, sizeof(struct s_ethernet) +
+					      sizeof(struct s_ipv6) +
+					      payload_size);
 		}
 	} else {
 		/* find connection in fragments table */
@@ -341,7 +342,7 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 
 		/* build ethernet header */
 		eth6->dest		= frag_conn->connection->mac;
-		eth6->src		= mac;
+		eth6->src		= mac_ipv6;
 		eth6->type		= htons(ETHERTYPE_IPV6);
 
 		/* build IPv6 header */
@@ -375,7 +376,7 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload, FRAGMENT_LEN);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) + mtu);
+			transmit_raw6(packet, sizeof(struct s_ethernet) + mtu);
 
 			/* create the second fragment */
 			ip6->len = htons(payload_size +
@@ -396,10 +397,10 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload_size - FRAGMENT_LEN);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) +
-					     sizeof(struct s_ipv6) +
-					     sizeof(struct s_ipv6_fragment) -
-					     FRAGMENT_LEN + payload_size);
+			transmit_raw6(packet, sizeof(struct s_ethernet) +
+					      sizeof(struct s_ipv6) +
+					      sizeof(struct s_ipv6_fragment) -
+					      FRAGMENT_LEN + payload_size);
 		} else {
 			/* fill in missing IPv6 header fields */
 			ip6->len = htons(payload_size +
@@ -420,10 +421,10 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			       payload, payload_size);
 
 			/* send translated packet */
-			transmit_raw(packet, sizeof(struct s_ethernet) +
-				     sizeof(struct s_ipv6) +
-				     sizeof(struct s_ipv6_fragment) +
-				     payload_size);
+			transmit_raw6(packet, sizeof(struct s_ethernet) +
+					      sizeof(struct s_ipv6) +
+					      sizeof(struct s_ipv6_fragment) +
+					      payload_size);
 		}
 	}
 
@@ -582,7 +583,7 @@ int tcp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
 
 	/* send translated packet */
 	transmit_ipv4(&ip4->ip_dest, packet, sizeof(struct s_ipv4) +
-		      payload_size);
+					     payload_size);
 
 	return 0;
 }

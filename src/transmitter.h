@@ -21,9 +21,11 @@
 
 #include "ipv4.h"
 
-int transmission_init(void);
+int transmission_init6(void);
+int transmission_init4(void);
 int transmission_quit(void);
-int transmit_raw(char *data, unsigned int length);
+int transmit_raw6(char *data, unsigned int length);
+int transmit_raw4(char *data, unsigned int length);
 int transmit_ipv4(struct s_ipv4_addr *ip, char *data, unsigned int length);
 
 #endif /* TRANSMITTER_H */

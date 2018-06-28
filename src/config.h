@@ -23,14 +23,16 @@
 #include "ipv6.h"
 
 struct s_cfg_opts {
-	char interface[128];
+	char interface_ipv6[128];
+	char interface_ipv4[128];
 	char prefix[128];
 	char ipv4_address[16];
 };
 
 int cfg_parse(const char *config_file, unsigned short *cmtu,
 	      struct s_cfg_opts *oto, unsigned char init);
-int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
-		 struct s_ipv4_addr *ipv4_addr, char *default_ipv4_addr);
+int cfg_host_ips(struct s_cfg_opts *oto,
+		 struct s_ipv6_addr *ipv6_addr,
+		 struct s_ipv4_addr *ipv4_addr);
 
 #endif /* CONFIG_H */

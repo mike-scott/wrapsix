@@ -28,8 +28,10 @@
 /* --- INTERNAL CONFIGURATION --- */
 
 extern unsigned short		mtu;
-extern struct ifreq		interface;
-extern struct s_mac_addr	mac;
+extern struct ifreq		interface_ipv6;
+extern struct ifreq		interface_ipv4;
+extern struct s_mac_addr	mac_ipv6;
+extern struct s_mac_addr	mac_ipv4;
 extern struct s_ipv6_addr	ndp_multicast_addr;
 extern struct s_ipv6_addr	wrapsix_ipv6_prefix;
 extern struct s_ipv4_addr	wrapsix_ipv4_addr;

@@ -45,7 +45,7 @@
 #define	C_DEFAULT_MTU		1280
 #define	C_DEFAULT_PREFIX	"64:ff9b::"
 
-void cfg_guess_interface(char *cinterface);
+static void cfg_guess_interface(struct s_cfg_opts *oto);
 
 /**
  * Configuration file parser.
@@ -75,8 +75,9 @@ int cfg_parse(const char *config_file, unsigned short *cmtu,
 
 	/* set defaults */
 	*cmtu = C_DEFAULT_MTU;
-	oto->interface[0] = '\0';
-	cfg_guess_interface(oto->interface);
+	oto->interface_ipv6[0] = '\0';
+	oto->interface_ipv4[0] = '\0';
+	cfg_guess_interface(oto);
 	strncpy(oto->prefix, C_DEFAULT_PREFIX, sizeof(oto->prefix));
 	oto->ipv4_address[0] = '\0';
 
@@ -169,9 +170,12 @@ int cfg_parse(const char *config_file, unsigned short *cmtu,
 					 MAX_MTU, C_DEFAULT_MTU);
 				*cmtu = C_DEFAULT_MTU;
 			}
-		} else if (!strcmp(tmp_opt, "interface")) {
-			strncpy(oto->interface, tmp_val,
-				sizeof(oto->interface));
+		} else if (!strcmp(tmp_opt, "interface_ipv6")) {
+			strncpy(oto->interface_ipv6, tmp_val,
+				sizeof(oto->interface_ipv6));
+		} else if (!strcmp(tmp_opt, "interface_ipv4")) {
+			strncpy(oto->interface_ipv4, tmp_val,
+				sizeof(oto->interface_ipv4));
 		} else if (!strcmp(tmp_opt, "prefix")) {
 			strncpy(oto->prefix, tmp_val, sizeof(oto->prefix));
 		} else if (!strcmp(tmp_opt, "ipv4_address")) {
@@ -190,6 +194,16 @@ int cfg_parse(const char *config_file, unsigned short *cmtu,
 
 	fclose(f);
 
+	if (init && oto->interface_ipv6[0] == '\0') {
+		log_error("IPv6 interface unconfigured! Exiting");
+		exit(1);
+	}
+
+	if (init && oto->interface_ipv4[0] == '\0') {
+		log_error("IPv4 interface unconfigured! Exiting");
+		exit(1);
+	}
+
 	if (init && oto->ipv4_address[0] == '\0') {
 		log_error("IPv4 address unconfigured! Exiting");
 		exit(1);
@@ -206,16 +220,17 @@ int cfg_parse(const char *config_file, unsigned short *cmtu,
  * configuration, in case of IPv6 is used made up address from default NAT64
  * prefix -- WrapSix itself cannot act as a host so it doesn't matter.
  *
- * @param	cinterface		Name of the interface WrapSix sits on
+ * @param	oto			One-time configuration options (used
+ * 					only locally to init other things)
  * @param	ipv6_addr		Where to save host IPv6 address
  * @param	ipv4_addr		Where to save host IPv4 address
- * @param	default_ipv4_addr	IPv4 address assigned to WrapSix
  *
  * @return      0 for success
  * @return      1 for failure
  */
-int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
-		 struct s_ipv4_addr *ipv4_addr, char *default_ipv4_addr)
+int cfg_host_ips(struct s_cfg_opts *oto,
+		 struct s_ipv6_addr *ipv6_addr,
+		 struct s_ipv4_addr *ipv4_addr)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	/* 0x01 IPv6 from WrapSix' interface
@@ -241,7 +256,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 			continue;
 		}
 
-		if (!strcmp(ifa->ifa_name, cinterface)) {
+		/* check for ipv6 interface name */
+		if (!strcmp(ifa->ifa_name, oto->interface_ipv6)) {
 			if (ifa->ifa_addr->sa_family == AF_INET6 &&
 			    !(found & 0x01)) {
 				found |= 0x01;
@@ -252,7 +268,10 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 				perc = strchr(ip_text, '%');
 				if (perc) *perc = '\0';
 				inet_pton(AF_INET6, ip_text, ipv6_addr);
-			} else if (ifa->ifa_addr->sa_family == AF_INET &&
+			}
+		/* check for ipv4 interface name */
+		} else if (!strcmp(ifa->ifa_name, oto->interface_ipv4)) {
+			if (ifa->ifa_addr->sa_family == AF_INET &&
 				   !(found & 0x02)) {
 				found |= 0x02;
 				getnameinfo(ifa->ifa_addr,
@@ -263,7 +282,8 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 				if (perc) *perc = '\0';
 				inet_pton(AF_INET, ip_text, ipv4_addr);
 			}
-		} else {	/* look for addresses on other interfaces too */
+		/* look for addresses on other interfaces too */
+		} else {
 			if (ifa->ifa_addr->sa_family == AF_INET6 &&
 			    !(found & 0x05)) {
 				found |= 0x04;
@@ -294,7 +314,7 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
 
 	/* no IPv4 address -> use default */
 	if (!(found & 0x0a)) {
-		inet_pton(AF_INET, default_ipv4_addr, ipv4_addr);
+		inet_pton(AF_INET, oto->ipv4_address, ipv4_addr);
 	}
 
 	/* IPv6 default? huh... but we can't work without host IPv6 address */
@@ -314,7 +334,7 @@ int cfg_host_ips(char *cinterface, struct s_ipv6_addr *ipv6_addr,
  *
  * @param	cinterface	Where to save the interface name
  */
-void cfg_guess_interface(char *cinterface)
+void cfg_guess_interface(struct s_cfg_opts *oto)
 {
 	struct ifaddrs *ifaddr, *ifa;
 
@@ -333,8 +353,11 @@ void cfg_guess_interface(char *cinterface)
 
 		/* skip loopback */
 		if (strcmp(ifa->ifa_name, "lo")) {
-			strncpy(cinterface, ifa->ifa_name,
-				sizeof(((struct s_cfg_opts *) NULL)->interface)
+			strncpy(oto->interface_ipv6, ifa->ifa_name,
+				sizeof(((struct s_cfg_opts *) NULL)->interface_ipv6)
+			);
+			strncpy(oto->interface_ipv4, ifa->ifa_name,
+				sizeof(((struct s_cfg_opts *) NULL)->interface_ipv4)
 			);
 			break;
 		}

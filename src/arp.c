@@ -69,7 +69,7 @@ int arp(struct s_ethernet *ethq, char *payload, unsigned short payload_size)
 
 	/* assemble the ethernet header */
 	ethr->dest = ethq->src;
-	ethr->src  = mac;
+	ethr->src  = mac_ipv4;
 	ethr->type = htons(ETHERTYPE_ARP);
 
 	/* assemble the ARP reply part */
@@ -84,7 +84,7 @@ int arp(struct s_ethernet *ethq, char *payload, unsigned short payload_size)
 	arpr->ip_dest   = arpq->ip_src;
 
 	/* send ARP reply */
-	transmit_raw(packet, ARP_PACKET_SIZE);
+	transmit_raw4(packet, ARP_PACKET_SIZE);
 
 	return 0;
 }

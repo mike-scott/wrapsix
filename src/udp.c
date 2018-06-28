@@ -96,7 +96,7 @@ int udp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 
 	/* build ethernet header */
 	eth6->dest		= connection->mac;
-	eth6->src		= mac;
+	eth6->src		= mac_ipv6;
 	eth6->type		= htons(ETHERTYPE_IPV6);
 
 	/* build IPv6 packet */
@@ -131,8 +131,8 @@ int udp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 	       payload, payload_size);
 
 	/* send translated packet */
-	transmit_raw(packet, sizeof(struct s_ethernet) + sizeof(struct s_ipv6) +
-		     payload_size);
+	transmit_raw6(packet, sizeof(struct s_ethernet) + sizeof(struct s_ipv6) +
+		      payload_size);
 
 	return 0;
 }

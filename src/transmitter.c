@@ -33,9 +33,10 @@
 #include "transmitter.h"
 #include "wrapper.h"
 
-struct sockaddr_ll	socket_address;
+struct sockaddr_ll	socket_address_raw6;
+struct sockaddr_ll	socket_address_raw4;
 struct sockaddr_in	socket_address_ipv4;
-int			sock, sock_ipv4;
+int			sock_raw6, sock_ipv4, sock_raw4;
 
 /**
  * Initialize sockets and all needed properties. Should be called only once on
@@ -44,32 +45,50 @@ int			sock, sock_ipv4;
  * @return	0 for success
  * @return	1 for failure
  */
-int transmission_init(void)
+int transmission_init6(void)
 {
-	unsigned char on = 1;
-
 	/** RAW socket **/
 	/* prepare settings for RAW socket */
-	socket_address.sll_family	= PF_PACKET;	/* raw communication */
-	socket_address.sll_protocol	= htons(ETH_P_IP);	/* L3 proto */
-	socket_address.sll_ifindex	= interface.ifr_ifindex;
-	socket_address.sll_pkttype	= PACKET_OTHERHOST;
+	socket_address_raw6.sll_family	= PF_PACKET;	/* raw communication */
+	socket_address_raw6.sll_protocol= htons(ETH_P_IPV6);	/* L3 proto */
+	socket_address_raw6.sll_ifindex	= interface_ipv6.ifr_ifindex;	/* set index of the network device */
+	socket_address_raw6.sll_pkttype	= PACKET_OTHERHOST;
 
 	/* initialize RAW socket */
-	if ((sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
+	if ((sock_raw6 = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
 		perror("socket");
 		log_error("Couldn't open RAW socket.");
 		return 1;
 	}
 
 	/* bind the socket to the interface */
-	if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, &interface,
-	    sizeof(struct ifreq)) == -1) {
-		perror("setsockopt");
-		log_error("Couldn't bind the socket to the interface.");
+	if (bind(sock_raw6, (struct sockaddr *)&socket_address_raw6,
+		 sizeof(socket_address_raw6)) == -1) {
+		perror("bind_ipv6");
+		log_error("Couldn't bind the socket to the ipv6 interface.");
 		return 1;
 	}
 
+	return 0;
+}
+
+int transmission_init4(void)
+{
+	unsigned char on = 1;
+
+	/** RAW socket for IPv4 **/
+	/* prepare settings for RAW socket */
+	socket_address_raw4.sll_family	= PF_PACKET;			/* RAW communication */
+	socket_address_raw4.sll_protocol= htons(ETH_P_IP);		/* protocol above the ethernet layer */
+	socket_address_raw4.sll_ifindex	= interface_ipv4.ifr_ifindex;	/* set index of the network device */
+	socket_address_raw4.sll_pkttype	= PACKET_OTHERHOST;		/* target host is another host */
+
+	/* initialize RAW socket */
+	if ((sock_raw4 = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
+		fprintf(stderr, "[Error] Couldn't open RAW socket [E4].\n");
+		perror("socket()");
+		return 1;
+	}
 
 	/** IPv4 socket **/
 	/* prepare settings for RAW IPv4 socket */
@@ -91,6 +110,14 @@ int transmission_init(void)
 		return 1;
 	}
 
+	/* bind the socket to the interface */
+	if (setsockopt(sock_ipv4, SOL_SOCKET, SO_BINDTODEVICE, &interface_ipv4,
+		       sizeof(struct ifreq)) == -1) {
+		perror("setsockopt()");
+		log_error("Couldn't bind the socket to the ipv4 interface.");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -103,7 +130,7 @@ int transmission_init(void)
 int transmission_quit(void)
 {
 	/* close the socket */
-	if (close(sock) || close(sock_ipv4)) {
+	if (close(sock_raw6) || close(sock_ipv4) || close(sock_raw4)) {
 		perror("close");
 		log_warn("Couldn't close the transmission sockets.");
 		return 1;
@@ -121,12 +148,24 @@ int transmission_quit(void)
  * @return	0 for success
  * @return	1 for failure
  */
-int transmit_raw(char *data, unsigned int length)
+int transmit_raw6(char *data, unsigned int length)
 {
-	if (sendto(sock, data, length, 0, (struct sockaddr *) &socket_address,
-	    sizeof(struct sockaddr_ll)) != (int) length) {
-		perror("sendto");
+	if (sendto(sock_raw6, data, length, 0, (struct sockaddr *) &socket_address_raw6,
+		   sizeof(struct sockaddr_ll)) != (int) length) {
+		perror("sendto raw6");
 		log_error("Couldn't send a RAW packet.");
+		return 1;
+	}
+
+	return 0;
+}
+
+int transmit_raw4(char *data, unsigned int length)
+{
+	if (sendto(sock_raw4, data, length, 0, (struct sockaddr *) &socket_address_raw4,
+		   sizeof(struct sockaddr_ll)) != (int) length) {
+		perror("sendto raw4");
+		log_error("Couldn't send a RAW4 packet.");
 		return 1;
 	}
 
