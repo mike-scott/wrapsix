@@ -437,6 +437,31 @@ static int process(char *packet, unsigned short length, int is_ipv6)
 		return 1;
 	}
 
+#if 1
+	/* HACK: For 6lowpan traffic the L2 info header doesn't exist: add it manually */
+
+	/*
+	 * NOTE: This could be Neighbor Advertisement or Router Advertisement as well.
+	 * These types of packets will fail silently with the IP address doesn't match
+	 * in ipv6()
+	 */
+	if (is_ipv6 && *(unsigned int *)packet == 0x00000060) {
+		struct s_ethernet eth6;
+		size_t eth6_len;
+
+		log_info("HACK: missing eth hdr");
+		/* build ethernet header */
+		eth6_len = sizeof(eth6);
+		eth6.dest = mac_ipv6;
+		eth6.src  = mac_ipv6;
+		eth6.type = htons(ETHERTYPE_IPV6);
+
+		memmove(packet + eth6_len, packet, eth6_len);
+		memcpy(packet, &eth6, eth6_len);
+		length += eth6_len;
+	}
+#endif
+
 	/* sanity check: out of every combination this is the smallest one */
 	if (is_ipv6 && (length < sizeof(struct s_ethernet) +
 				 sizeof(struct s_ipv6) +
