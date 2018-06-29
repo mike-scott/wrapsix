@@ -77,17 +77,17 @@ struct s_icmp_ndp_na {
 							  link-layer address */
 } __attribute__ ((__packed__));
 
-int icmp_ipv4(struct s_ethernet *eth, struct s_ipv4 *ip4, char *payload,
+int icmp_ipv4(struct s_ethernet *eth, struct s_ipv4 *ip4, unsigned char *payload,
 	      unsigned short payload_size);
-int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
+int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, unsigned char *payload,
 	      unsigned short payload_size);
 int icmp_ndp(struct s_ethernet *ethq, struct s_ipv6 *ipq,
 	     struct s_icmp_ndp_ns *ndp_ns);
 
 int icmp4_error(struct s_ipv4_addr ip_dest, unsigned char type,
-		unsigned char code, char *data, unsigned short length);
+		unsigned char code, unsigned char *data, unsigned short length);
 int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
-		unsigned char type, unsigned char code, char *data,
+		unsigned char type, unsigned char code, unsigned char *data,
 		unsigned short length);
 
 #endif /* ICMP_H */

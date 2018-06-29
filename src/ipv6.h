@@ -68,6 +68,6 @@ struct s_ipv6_pseudo_delta {
 							  address */
 } __attribute__ ((__packed__));
 
-int ipv6(struct s_ethernet *eth, char *packet, unsigned short length);
+int ipv6(struct s_ethernet *eth, unsigned char *packet, unsigned short length);
 
 #endif /* IPV6_H */

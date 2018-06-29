@@ -32,12 +32,12 @@
 #include "wrapper.h"
 
 /* declarations */
-int sub_icmp4_error(char *payload, unsigned short payload_size,
-		    char *packet, unsigned short *packet_len,
+int sub_icmp4_error(unsigned char *payload, unsigned short payload_size,
+		    unsigned char *packet, unsigned short *packet_len,
 		    struct s_icmp **icmp, struct s_nat **connection);
 int sub_icmp6_error(struct s_ethernet *eth6,
-		    char *payload, unsigned short payload_size,
-		    char *packet, unsigned short *packet_len,
+		    unsigned char *payload, unsigned short payload_size,
+		    unsigned char *packet, unsigned short *packet_len,
 		    struct s_icmp **icmp, struct s_nat **connection);
 
 /**
@@ -52,7 +52,7 @@ int sub_icmp6_error(struct s_ethernet *eth6,
  * @return	0 for success
  * @return	1 for failure
  */
-int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
+int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, unsigned char *payload,
 	      unsigned short payload_size)
 {
 	struct s_icmp	*icmp;
@@ -86,7 +86,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 	/* ICMP checksum recheck */
 	orig_checksum = icmp->checksum;
 	icmp->checksum = 0x0;
-	icmp->checksum = checksum((char *) icmp, payload_size);
+	icmp->checksum = checksum((unsigned char *) icmp, payload_size);
 
 	if (icmp->checksum != orig_checksum) {
 		/* packet is corrupted and shouldn't be processed */
@@ -150,7 +150,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 					icmp->type = ICMPV6_PARAM_PROBLEM;
 					icmp->code = 1;
 					icmp_extra = (unsigned int *)
-						((char *) icmp +
+						((unsigned char *) icmp +
 						 sizeof(struct s_icmp));
 					if (eip6->next_header ==
 					    IPPROTO_FRAGMENT) {
@@ -165,12 +165,12 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 					icmp->code = 0;
 					/* here to write new 4B MTU value */
 					icmp_extra = (unsigned int *)
-						((char *) icmp +
+						((unsigned char *) icmp +
 						 sizeof(struct s_icmp));
 					/* from here read original 2B MTU value
 					 * after skipping 2 unused bytes */
 					icmp_extra_s = (unsigned short *)
-						((char *) icmp +
+						((unsigned char *) icmp +
 						 sizeof(struct s_icmp) + 2);
 					/* router supports path MTU discovery */
 					if (ntohs(*icmp_extra_s) >= 68) {
@@ -247,9 +247,9 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 			if (icmp->code == 0 || icmp->code == 2) {
 				/* update the extra field */
 				icmp_extra = (unsigned int *)
-					     ((char *) icmp +
+					     ((unsigned char *) icmp +
 					      sizeof(struct s_icmp));
-				icmp_extra_c = (char *) icmp_extra;
+				icmp_extra_c = (unsigned char *) icmp_extra;
 				switch (*icmp_extra_c) {
 					case 0:
 					case 1:
@@ -336,7 +336,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
 	icmp->checksum = checksum_ipv6(ip6->ip_src, ip6->ip_dest, new_len -
 				       sizeof(struct s_ethernet) -
 				       sizeof(struct s_ipv6), IPPROTO_ICMPV6,
-				       (char *) icmp);
+				       (unsigned char *) icmp);
 
 	/* send translated packet */
 	transmit_raw6(packet, new_len);
@@ -356,7 +356,7 @@ int icmp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
  * @return	0 for success
  * @return	1 for failure
  */
-int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
+int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, unsigned char *payload,
 	      unsigned short payload_size)
 {
 	struct s_icmp 	*icmp;
@@ -387,7 +387,7 @@ int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
 	icmp->checksum = 0;
 	icmp->checksum = checksum_ipv6(ip6->ip_src, ip6->ip_dest,
 				       payload_size, IPPROTO_ICMPV6,
-				       (char *) icmp);
+				       (unsigned char *) icmp);
 
 	if (icmp->checksum != orig_checksum) {
 		/* packet is corrupted and shouldn't be processed */
@@ -506,9 +506,9 @@ int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
 
 				/* update the extra field */
 				icmp_extra = (unsigned int *)
-					     ((char *) icmp +
+					     ((unsigned char *) icmp +
 					      sizeof(struct s_icmp));
-				icmp_extra_c = (char *) icmp_extra;
+				icmp_extra_c = (unsigned char *) icmp_extra;
 				switch (*icmp_extra) {
 					case 0:
 					case 1:
@@ -582,9 +582,9 @@ int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
 			icmp->code = 4;
 
 			icmp_extra = (unsigned int *)
-				((char *) icmp + sizeof(struct s_icmp));
+				((unsigned char *) icmp + sizeof(struct s_icmp));
 			icmp_extra_s = (unsigned short *)
-				((char *) icmp + sizeof(struct s_icmp) + 2);
+				((unsigned char *) icmp + sizeof(struct s_icmp) + 2);
 			if (eip6->next_header != IPPROTO_FRAGMENT) {
 				*icmp_extra_s = htons(ntohl(*icmp_extra) - 20);
 			} else {
@@ -625,12 +625,12 @@ int icmp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
 
 	/* compute ICMP checksum */
 	icmp->checksum = 0x0;
-	icmp->checksum = checksum((char *) icmp, new_len -
+	icmp->checksum = checksum((unsigned char *) icmp, new_len -
 				  sizeof(struct s_ipv4));
 
 	/* compute IPv4 checksum */
 	ip4->checksum = checksum_ipv4(ip4->ip_src, ip4->ip_dest,
-				      new_len, IPPROTO_ICMP, (char *) icmp);
+				      new_len, IPPROTO_ICMP, (unsigned char *) icmp);
 
 	/* send translated packet */
 	transmit_ipv4(&ip4->ip_dest, packet, new_len);
@@ -706,7 +706,7 @@ int icmp_ndp(struct s_ethernet *ethq, struct s_ipv6 *ipq,
 	/* compute ICMP checksum */
 	icmp->checksum = checksum_ipv6(ipr->ip_src, ipr->ip_dest,
 				       htons(ipr->len), IPPROTO_ICMPV6,
-				       (char *) icmp);
+				       (unsigned char *) icmp);
 
 	/* send NDP reply */
 	transmit_raw6(packet, NDP_PACKET_SIZE);
@@ -727,7 +727,7 @@ int icmp_ndp(struct s_ethernet *ethq, struct s_ipv6 *ipq,
  * @return	1 for failure
  */
 int icmp4_error(struct s_ipv4_addr ip_dest, unsigned char type,
-		unsigned char code, char *data, unsigned short length)
+		unsigned char code, unsigned char *data, unsigned short length)
 {
 	char		 packet[PACKET_BUFFER];
 	char		*payload;
@@ -771,13 +771,13 @@ int icmp4_error(struct s_ipv4_addr ip_dest, unsigned char type,
 	memcpy(payload, data, payload_size);
 
 	/* compute ICMP checksum */
-	icmp->checksum = checksum((char *) icmp,
+	icmp->checksum = checksum((unsigned char *) icmp,
 				  payload_size + 4 + sizeof(struct s_icmp));
 
 	/* compute IPv4 checksum */
 	ip4->checksum = checksum_ipv4(ip4->ip_src, ip4->ip_dest,
 				      htons(ip4->len), IPPROTO_ICMP,
-				      (char *) icmp);
+				      (unsigned char *) icmp);
 
 	/* send packet */
 	transmit_ipv4(&ip4->ip_dest, packet, htons(ip4->len));
@@ -799,7 +799,7 @@ int icmp4_error(struct s_ipv4_addr ip_dest, unsigned char type,
  * @return	1 for failure
  */
 int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
-		unsigned char type, unsigned char code, char *data,
+		unsigned char type, unsigned char code, unsigned char *data,
 		unsigned short length)
 {
 	char		   packet[PACKET_BUFFER];
@@ -853,7 +853,7 @@ int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
 	/* compute ICMP checksum */
 	icmp->checksum = checksum_ipv6(host_ipv6_addr, ip_dest,
 				       sizeof(struct s_icmp) + 4 + payload_size,
-				       IPPROTO_ICMPV6, (char *) icmp);
+				       IPPROTO_ICMPV6, (unsigned char *) icmp);
 
 	/* send packet */
 	transmit_raw6(packet, sizeof(struct s_ethernet) + sizeof(struct s_ipv6) +
@@ -875,8 +875,8 @@ int icmp6_error(struct s_mac_addr mac_dest, struct s_ipv6_addr ip_dest,
  * @return	0 for success
  * @return	1 for failure
  */
-int sub_icmp4_error(char *payload, unsigned short payload_size,
-		    char *packet, unsigned short *packet_len,
+int sub_icmp4_error(unsigned char *payload, unsigned short payload_size,
+		    unsigned char *packet, unsigned short *packet_len,
 		    struct s_icmp **icmp, struct s_nat **connection)
 {
 	struct s_ipv4		*eip4;
@@ -997,7 +997,7 @@ int sub_icmp4_error(char *payload, unsigned short payload_size,
 	}
 
 	/* copy ICMP header to new packet */
-	memcpy(packet + *packet_len, (char *) *icmp, sizeof(struct s_icmp) + 4);
+	memcpy(packet + *packet_len, (unsigned char *) *icmp, sizeof(struct s_icmp) + 4);
 	*icmp = (struct s_icmp *) (packet + *packet_len);
 
 	/* complete inner IPv6 header */
@@ -1071,8 +1071,8 @@ int sub_icmp4_error(char *payload, unsigned short payload_size,
  * @return	1 for failure
  */
 int sub_icmp6_error(struct s_ethernet *eth6,
-		    char *payload, unsigned short payload_size,
-		    char *packet, unsigned short *packet_len,
+		    unsigned char *payload, unsigned short payload_size,
+		    unsigned char *packet, unsigned short *packet_len,
 		    struct s_icmp **icmp, struct s_nat **connection)
 {
 	struct s_ipv4		*eip4;

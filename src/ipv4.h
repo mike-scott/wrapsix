@@ -64,6 +64,6 @@ struct s_ipv4_pseudo_delta {
 							 address */
 } __attribute__ ((__packed__));
 
-int ipv4(struct s_ethernet *eth, char *packet, unsigned short length);
+int ipv4(struct s_ethernet *eth, unsigned char *packet, unsigned short length);
 
 #endif /* IPV4_H */

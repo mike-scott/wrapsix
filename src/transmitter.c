@@ -148,7 +148,7 @@ int transmission_quit(void)
  * @return	0 for success
  * @return	1 for failure
  */
-int transmit_raw6(char *data, unsigned int length)
+int transmit_raw6(unsigned char *data, unsigned int length)
 {
 	if (sendto(sock_raw6, data, length, 0, (struct sockaddr *) &socket_address_raw6,
 		   sizeof(struct sockaddr_ll)) != (int) length) {
@@ -160,7 +160,7 @@ int transmit_raw6(char *data, unsigned int length)
 	return 0;
 }
 
-int transmit_raw4(char *data, unsigned int length)
+int transmit_raw4(unsigned char *data, unsigned int length)
 {
 	if (sendto(sock_raw4, data, length, 0, (struct sockaddr *) &socket_address_raw4,
 		   sizeof(struct sockaddr_ll)) != (int) length) {
@@ -183,7 +183,8 @@ int transmit_raw4(char *data, unsigned int length)
  * @return	0 for success
  * @return	1 for failure
  */
-int transmit_ipv4(struct s_ipv4_addr *ip, char *data, unsigned int length)
+int transmit_ipv4(struct s_ipv4_addr *ip, unsigned char *data,
+		  unsigned int length)
 {
 	/* set the destination IPv4 address */
 	memcpy(&socket_address_ipv4.sin_addr.s_addr, ip,

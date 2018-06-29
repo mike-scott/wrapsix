@@ -36,7 +36,7 @@
  * @return	0 for success
  * @return	1 for failure
  */
-int ipv4(struct s_ethernet *eth, char *packet, unsigned short length)
+int ipv4(struct s_ethernet *eth, unsigned char *packet, unsigned short length)
 {
 	struct s_ipv4	*ip;
 	char		*payload;

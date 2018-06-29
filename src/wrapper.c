@@ -63,7 +63,7 @@ struct s_ipv4_addr	host_ipv4_addr;
 
 static void *sniff_ipv6(void *arg);
 static void *sniff_ipv4(void *arg);
-static int process(char *packet, unsigned short length, int is_ipv6);
+static int process(unsigned char *packet, unsigned short length, int is_ipv6);
 
 int main(int argc, char **argv)
 {
@@ -145,7 +145,7 @@ static void *sniff_ipv6(void *arg)
 
 	int	sniff_sock;
 	int	length;
-	char	buffer[PACKET_BUFFER];
+	unsigned char	buffer[PACKET_BUFFER];
 
 	int	i;
 	time_t	prevtime, curtime;
@@ -296,7 +296,7 @@ static void *sniff_ipv4(void *arg)
 
 	int	sniff_sock;
 	int	length;
-	char	buffer[PACKET_BUFFER];
+	unsigned char	buffer[PACKET_BUFFER];
 
 	int	i;
 	time_t	prevtime, curtime;
@@ -449,7 +449,7 @@ static void *sniff_ipv4(void *arg)
  * @return	0 for success
  * @return	1 for failure
  */
-static int process(char *packet, unsigned short length, int is_ipv6)
+static int process(unsigned char *packet, unsigned short length, int is_ipv6)
 {
 	struct s_ethernet *eth;
 

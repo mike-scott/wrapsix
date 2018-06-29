@@ -47,7 +47,7 @@
  * @return	0 for success
  * @return	1 for failure
  */
-int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
+int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, unsigned char *payload,
 	     unsigned short payload_size)
 {
 	struct s_tcp	*tcp;
@@ -443,7 +443,7 @@ int tcp_ipv4(struct s_ethernet *eth4, struct s_ipv4 *ip4, char *payload,
  * @return	0 for success
  * @return	1 for failure
  */
-int tcp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, char *payload,
+int tcp_ipv6(struct s_ethernet *eth6, struct s_ipv6 *ip6, unsigned char *payload,
 	     unsigned short payload_size)
 {
 	struct s_tcp	*tcp;
